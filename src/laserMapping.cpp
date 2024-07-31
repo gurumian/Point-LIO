@@ -221,7 +221,7 @@ void publish_frame_world(
     if (pcl_wait_save->size() > 0 && pcd_save_interval > 0 &&
         scan_wait_num >= pcd_save_interval) {
       pcd_index++;
-      string all_points_dir(string(string(ROOT_DIR) + "PCD/scans_") +
+      string all_points_dir(string(root_dir + "/PCD/scans_") +
                             to_string(pcd_index) + string(".pcd"));
       pcl::PCDWriter pcd_writer;
       cout << "current scan saved to /PCD/" << all_points_dir << endl;
@@ -318,6 +318,11 @@ void publish_path(
 }
 
 int main(int argc, char **argv) {
+  const char *pointlio_working_dir = ::getenv("POINTLIO_WORKING_DIR");
+  if(pointlio_working_dir) {
+    root_dir = pointlio_working_dir;
+  }
+
   rclcpp::init(argc, argv);
   auto nh = std::make_shared<rclcpp::Node>("laserMapping");
   // rclcpp::AsyncSpinner spinner(0);
@@ -413,6 +418,9 @@ int main(int argc, char **argv) {
   auto tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(nh);
   //------------------------------------------------------------------------------------------------------
   signal(SIGINT, SigHandle);
+  signal(SIGTERM, SigHandle);
+  signal(SIGKILL, SigHandle);
+
   rclcpp::Rate rate(500);
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(nh);
@@ -1102,7 +1110,7 @@ int main(int argc, char **argv) {
      2. noted that pcd save will influence the real-time performences **/
   if (pcl_wait_save->size() > 0 && pcd_save_en) {
     string file_name = string("scans.pcd");
-    string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
+    string all_points_dir(string(root_dir + "/PCD/") + file_name);
     pcl::PCDWriter pcd_writer;
     pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
   }
